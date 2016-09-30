@@ -18,7 +18,7 @@
 **/
 void parse_file(const std::string &input, std::vector<double> &input_vector) {
 
-	std::ifstream fin(input);
+	std::ifstream fin(input.c_str());
 	int size = 0;
 	double value = 0.0;
 
@@ -44,7 +44,7 @@ void parse_file(const std::string &input, std::vector<double> &input_vector) {
 **/
 void write_file(const std::string &output, int size, std::vector<double> output_vector) {
 
-	std::ofstream fout(output);
+	std::ofstream fout(output.c_str());
 
 	fout << size;
 
@@ -61,7 +61,7 @@ void write_file(const std::string &output, int size, std::vector<double> output_
 
 	@param input1 The first text file with matrix values
 	@param input2 The second text file with matrix values
-	@param ouput The output text file to write the results too 
+	@param ouput The output text file to write the results too
 **/
 void multiply(const std::string &input1, const std::string &input2, const std::string &output) {
 

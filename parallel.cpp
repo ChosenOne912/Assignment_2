@@ -20,7 +20,7 @@
 **/
 void parse_file(const std::string &input, std::vector<double> &input_vector) {
 
-	std::ifstream fin(input);
+	std::ifstream fin(input.c_str());
 	int size = 0;
 	double value = 0.0;
 
@@ -46,7 +46,7 @@ void parse_file(const std::string &input, std::vector<double> &input_vector) {
 **/
 void write_file(const std::string &output, int size, std::vector<double> output_vector) {
 
-	std::ofstream fout(output);
+	std::ofstream fout(output.c_str());
 
 	fout << size;
 
