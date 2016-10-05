@@ -24,13 +24,15 @@ LDLIBS =
 
 
 
-CPP_FILES = parallel.cpp serial.cpp
+CPP_FILES = create_matrix.cpp parallel.cpp serial.cpp
 OBJ_FILES := $(CPP_FILES:.cpp=.o)
 HDR_FILES = 
 
-serial: LDLIBS += -fopenmp
+create_matrix: CXXFLAGS += -std=c++11
+parallel: LDLIBS += -fopenmp
 
-PROG = parallel serial
+
+PROG = create_matrix parallel serial
 
 .PHONY : all
 all : $(PROG)

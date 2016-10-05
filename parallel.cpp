@@ -1,3 +1,9 @@
+/*
+Author Name: W. Austin Wade
+File Name: parallel.cpp
+Parallel Matrix Multiplication
+*/
+
 #include <sys/time.h>
 #include <math.h>
 #include <omp.h>
@@ -58,30 +64,31 @@ void write_file(const std::string &output, int size, std::vector<double> output_
 }
 
 /**
-	This function reads matrices from text files, multiplies them in parallel, and
-	then writes the result out to a text files
+	This function takes two vectors that represent matrices and multiplies them
+	together in parallel to form a new vector that represents their multiplication
 
-	@param input1 The first text file with matrix values
-	@param input2 The second text file with matrix values
-	@param ouput The output text file to write the results too
-	@param threads The number of threads to use during the calculation
+	@param input_vector1 The first vector with matrix values
+	@param input_vector2 The second vector with matrix values
+	@param ouput_vector The output vector to write the results too
+	@param threads The number of threads to divide the work into
 **/
-void multiply(const std::string &input1, const std::string &input2, const std::string &output, unsigned int threads) {
+void multiply(std::vector<double> input_vector1,
+							std::vector<double> input_vector2,
+							std::vector<double> &output_vector,
+							unsigned int threads) {
 
-	int size = 0;
-	std::vector<double> input_vector1;
-	std::vector<double> input_vector2;
-	std::vector<double> output_vector;
-
-	parse_file(input1, input_vector1);
-	parse_file(input2, input_vector2);
-
-	size = (int) sqrt(input_vector1.size());
+	int size = (int) sqrt(input_vector1.size());
 	output_vector.resize((size*size), 0.0);
 
 	#pragma omp parallel num_threads(threads)
-		#pragma omp for
-			for(int i = 0; i < size; i++){
+	{
+			int rank = omp_get_thread_num();
+			int thread_count = omp_get_num_threads();
+
+			int a = (rank*size)/thread_count;
+			int b = ((rank+1)*size)/thread_count;
+
+			for(int i = a; i < b; i++){
 				for(int j = 0; j < size; j++){
 					double sum = 0.0;
 					for(int k = 0; k < size; k++){
@@ -90,9 +97,7 @@ void multiply(const std::string &input1, const std::string &input2, const std::s
 					output_vector[(i*size)+j] = sum;
 				}
 			}
-
-	write_file(output, size, output_vector);
-
+		}
 }
 
 void usage(const char *file_name) {
@@ -195,16 +200,34 @@ int main(int argc, char *argv[]) {
 	std::string input1, input2, output;
 
 	if(parse_args(argc, argv, threads, input1, input2, output)) {
-		struct timeval start_tv, end_tv;
+		struct timeval start_1, end_1, start_2, end_2;
 
-		gettimeofday(&start_tv, NULL);
-		multiply(input1, input2, output, threads);
-		gettimeofday(&end_tv, NULL);
+		//Create vectors to store the matrix values
+		std::vector<double> input_vector1;
+		std::vector<double> input_vector2;
+		std::vector<double> output_vector;
 
-		long double runtime = ((end_tv.tv_sec - start_tv.tv_sec)*(1000000.0L) + (end_tv.tv_usec - start_tv.tv_usec))/(1000.0L);
+		gettimeofday(&start_1, NULL);
+
+		//Read the matrix values from text files
+		parse_file(input1, input_vector1);
+		parse_file(input2, input_vector2);
+
+		gettimeofday(&start_2, NULL);
+		multiply(input_vector1, input_vector2, output_vector, threads);
+		gettimeofday(&end_1, NULL);
+
+		int size = (int) sqrt(input_vector1.size());
+		write_file(output, size, output_vector);
+
+		gettimeofday(&end_2, NULL);
+
+		long double etoe_runtime = ((end_2.tv_sec - start_1.tv_sec)*(1000000.0L) + (end_2.tv_usec - start_1.tv_usec))/(1000.0L);
+		long double matrix_runtime = ((end_1.tv_sec - start_2.tv_sec)*(1000000.0L) + (end_1.tv_usec - start_2.tv_usec))/(1000.0L);
 
 		std::cout << std::setprecision(17);
-		std::cout << "Run Time: " << runtime << std::endl;
+		std::cout << "EToE Run Time: " << etoe_runtime << std::endl;
+		std::cout << "Matrix Run Time: " << matrix_runtime << std::endl;
 	}
 
 	return 0;
